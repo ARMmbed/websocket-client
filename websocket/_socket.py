@@ -40,7 +40,7 @@ if hasattr(socket, "TCP_KEEPCNT"):
 _default_timeout = None
 
 __all__ = ["DEFAULT_SOCKET_OPTION", "sock_opt", "setdefaulttimeout", "getdefaulttimeout",
-           "recv", "recv_line", "send"]
+           "recv", "recv_line", "send", "SSLError"]
 
 
 class sock_opt(object):
