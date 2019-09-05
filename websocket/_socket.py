@@ -26,6 +26,7 @@ import socket
 import six
 import sys
 
+from ._logging import error as log_error
 from ._exceptions import *
 from ._ssl_compat import *
 from ._utils import *
@@ -86,14 +87,21 @@ def recv(sock, bufsize):
             pass
         except socket.error as exc:
             error_code = extract_error_code(exc)
+            log_error("Socket error")
+            log_error("Error code {}".format(error_code))
             if error_code is None:
                 raise
             if error_code != errno.EAGAIN or error_code != errno.EWOULDBLOCK:
+                log_error("Error is EAGAIN or EWOULDBLOCK.")
                 raise
 
         r, w, e = select.select((sock, ), (), (), sock.gettimeout())
         if r:
-            return sock.recv(bufsize)
+            try:
+                return sock.recv(bufsize)
+            except Exception as error:
+                log_error("Retried recv also failed with {}.".format(error))
+                raise
 
     try:
         if sock.gettimeout() == 0:
