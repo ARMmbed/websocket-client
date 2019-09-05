@@ -501,6 +501,7 @@ def create_connection(url, timeout=None, class_=WebSocket, **options):
              "skip_utf8_validation" - skip utf8 validation.
              "socket" - pre-initialized stream socket.
     """
+    debug("This is debug version of websocket-client")
     sockopt = options.pop("sockopt", [])
     sslopt = options.pop("sslopt", {})
     fire_cont_frame = options.pop("fire_cont_frame", False)
