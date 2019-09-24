@@ -26,7 +26,7 @@ import socket
 import six
 import sys
 
-from ._logging import error as log_error
+from ._logging import error as log_error, debug as log_debug
 from ._exceptions import *
 from ._ssl_compat import *
 from ._utils import *
@@ -94,10 +94,11 @@ def recv(sock, bufsize):
             if error_code != errno.EAGAIN or error_code != errno.EWOULDBLOCK:
                 log_error("Error is EAGAIN or EWOULDBLOCK.")
                 raise
-
+        log_debug("Reselect, timeout: {}".format(sock.gettimeout()))
         r, w, e = select.select((sock, ), (), (), sock.gettimeout())
         if r:
             try:
+                log_debug("Retrying recv")
                 return sock.recv(bufsize)
             except Exception as error:
                 log_error("Retried recv also failed with {}.".format(error))
@@ -108,17 +109,21 @@ def recv(sock, bufsize):
             bytes_ = sock.recv(bufsize)
         else:
             bytes_ = _recv()
+        log_debug("Bytes_: {}".format(bytes_))
     except socket.timeout as e:
         message = extract_err_message(e)
+        log_error("socket.timeout: {}".format(message))
         raise WebSocketTimeoutException(message)
     except SSLError as e:
         message = extract_err_message(e)
+        log_error("SSLError: {}".format(message))
         if isinstance(message, str) and 'timed out' in message:
             raise WebSocketTimeoutException(message)
         else:
             raise
 
     if not bytes_:
+        log_error("No bytes_: {} Connection is already closed?".format(bytes_))
         raise WebSocketConnectionClosedException(
             "Connection is already closed.")
 
