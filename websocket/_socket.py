@@ -94,15 +94,16 @@ def recv(sock, bufsize):
             if error_code != errno.EAGAIN or error_code != errno.EWOULDBLOCK:
                 log_error("Error is EAGAIN or EWOULDBLOCK.")
                 raise
-        log_debug("Reselect, timeout: {}".format(sock.gettimeout()))
-        r, w, e = select.select((sock, ), (), (), sock.gettimeout())
-        if r:
-            try:
-                log_debug("Retrying recv")
-                return sock.recv(bufsize)
-            except Exception as error:
-                log_error("Retried recv also failed with {}.".format(error))
-                raise
+        for ind in range(5):
+            log_debug("Reselect, timeout: {}".format(sock.gettimeout()))
+            r, w, e = select.select((sock, ), (), (), sock.gettimeout())
+            if r:
+                try:
+                    log_debug("Retrying recv")
+                    return sock.recv(bufsize)
+                except Exception as error:
+                    log_error("Retried recv also failed with {}.".format(error))
+                    raise
 
     try:
         if sock.gettimeout() == 0:
